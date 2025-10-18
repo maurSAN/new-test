@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
@@ -79,8 +40,26 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // URL GeoJSON (folosește URL-ul GitHub)
+    // URL GeoJSON
     const geojsonURL = 'https://raw.githubusercontent.com/maurSAN/harta-test/main/ro.json';
+
+    // Contur România (GeoJSON simplificat pentru conturul țării)
+    const romaniaOutline = {
+      "type": "FeatureCollection",
+      "features": [{
+        "type": "Feature",
+        "properties": { "name": "Romania" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [20.261, 44.222], [20.261, 48.265], [22.135, 48.265], [22.897, 47.987],
+            [24.968, 47.987], [26.619, 48.265], [28.839, 47.738], [29.602, 46.517],
+            [29.141, 45.422], [28.223, 43.644], [26.698, 43.618], [22.897, 43.618],
+            [20.261, 44.222]
+          ]]
+        }
+      }]
+    };
 
     // Abrevieri județe
     const abbreviations = {
@@ -124,9 +103,28 @@
     }
 
     // Inițializează harta
-    const map = L.map('map').setView([45.9432, 24.9668], 7);
+    const map = L.map('map', {
+      center: [45.9432, 24.9668],
+      zoom: 7,
+      minZoom: 7, // Blochează zoom out
+      maxZoom: 10, // Limitează zoom in
+      maxBounds: [[43.5, 20.0], [48.5, 30.0]], // Limitează la România
+      maxBoundsViscosity: 1.0 // Blochează mișcarea în afara limitelor
+    });
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      minZoom: 7,
+      maxZoom: 10
+    }).addTo(map);
+
+    // Adaugă conturul țării
+    L.geoJSON(romaniaOutline, {
+      style: {
+        color: "#000000", // Contur negru gros
+        weight: 4,
+        fill: false // Fără umplutură
+      }
     }).addTo(map);
 
     // Creează pane-uri pentru a controla ordinea straturilor
@@ -135,7 +133,7 @@
     map.createPane('otherPane');
     map.getPane('otherPane').style.zIndex = 600;
 
-    // Încarcă și afișează GeoJSON
+    // Încarcă și afișează GeoJSON pentru județe
     fetch(geojsonURL)
       .then(response => {
         if (!response.ok) throw new Error('Eroare la încărcarea ro.json: ' + response.statusText);
@@ -148,8 +146,8 @@
             const name = normalizeName(rawName);
             const abbr = abbreviations[name] || "??";
             return {
-              color: "#000000", // Contur negru
-              weight: 3, // Grosime contur
+              color: "#000000", // Contur negru între județe
+              weight: 2, // Grosime contur județe
               fillColor: colors[abbr] || "#cccccc",
               fillOpacity: 0.6,
               pane: abbr === "B" ? "bucurestiPane" : "otherPane"
