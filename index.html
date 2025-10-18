@@ -40,23 +40,26 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // URL GeoJSON
+    // URL GeoJSON pentru județe
     const geojsonURL = 'https://raw.githubusercontent.com/maurSAN/harta-test/main/ro.json';
 
-    // Contur România (GeoJSON simplificat pentru conturul țării)
+    // Contur România (GeoJSON detaliat, simplificat pentru contur țară)
     const romaniaOutline = {
       "type": "FeatureCollection",
       "features": [{
         "type": "Feature",
         "properties": { "name": "Romania" },
         "geometry": {
-          "type": "Polygon",
-          "coordinates": [[
-            [20.261, 44.222], [20.261, 48.265], [22.135, 48.265], [22.897, 47.987],
-            [24.968, 47.987], [26.619, 48.265], [28.839, 47.738], [29.602, 46.517],
-            [29.141, 45.422], [28.223, 43.644], [26.698, 43.618], [22.897, 43.618],
-            [20.261, 44.222]
-          ]]
+          "type": "MultiPolygon",
+          "coordinates": [[[
+            [20.2616, 44.2221], [20.3502, 44.8442], [20.4868, 45.2349], [21.0137, 45.6144],
+            [21.5429, 45.9432], [22.1378, 46.3498], [22.8972, 47.9871], [23.7993, 47.9871],
+            [24.9688, 47.9871], [25.8372, 47.9871], [26.6194, 48.2654], [27.4924, 47.9871],
+            [28.8398, 47.7387], [29.6022, 46.5178], [29.1418, 45.4228], [28.2234, 43.6442],
+            [27.4924, 43.6442], [26.6984, 43.6187], [25.8372, 43.6187], [24.9688, 43.6187],
+            [23.7993, 43.6187], [22.8972, 43.6187], [22.1378, 43.6442], [21.5429, 43.6442],
+            [20.4868, 43.6442], [20.2616, 44.2221]
+          ]]]
         }
       }]
     };
@@ -108,7 +111,7 @@
       zoom: 7,
       minZoom: 7, // Blochează zoom out
       maxZoom: 10, // Limitează zoom in
-      maxBounds: [[43.5, 20.0], [48.5, 30.0]], // Limitează la România
+      maxBounds: [[43.6187, 20.2616], [48.2654, 29.6022]], // Limite precise România
       maxBoundsViscosity: 1.0 // Blochează mișcarea în afara limitelor
     });
 
@@ -122,7 +125,7 @@
     L.geoJSON(romaniaOutline, {
       style: {
         color: "#000000", // Contur negru gros
-        weight: 4,
+        weight: 5, // Grosime contur țară
         fill: false // Fără umplutură
       }
     }).addTo(map);
@@ -147,7 +150,7 @@
             const abbr = abbreviations[name] || "??";
             return {
               color: "#000000", // Contur negru între județe
-              weight: 2, // Grosime contur județe
+              weight: 3, // Grosime contur județe
               fillColor: colors[abbr] || "#cccccc",
               fillOpacity: 0.6,
               pane: abbr === "B" ? "bucurestiPane" : "otherPane"
