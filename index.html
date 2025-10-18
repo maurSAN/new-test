@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body, html { margin: 0; height: 100%; }
-    #map { width: 100%; max-width: 1000px; height: 700px; margin: 0 auto; } /* Mărit */
+    #map { width: 100%; height: 100%; }
     .county-label {
       font-size: 12px;
       font-weight: bold;
@@ -23,29 +23,21 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Funcție pentru normalizarea numelor
+    // Funcție pentru normalizarea numelor (doar lowercase, păstrează diacritice)
     function normalizeName(name) {
       if (!name) return '';
-      return name.toLowerCase()
-        .replace(/[ăâ]/g, 'a')
-        .replace(/î/g, 'i')
-        .replace(/[șş]/g, 's')
-        .replace(/[țţ]/g, 't')
-        .replace(/\s+/g, '-') // Spații -> cratimă
-        .replace(/[^a-z0-9-]/g, '')
-        .replace(/bucurești/g, 'bucuresti')
-        .replace(/satu-mare/g, 'satu-mare');
+      return name.toLowerCase();
     }
 
-    // Inițializare hartă
+    // Inițializare hartă cu limite stricte pentru România
     const map = L.map('map', {
       maxBounds: [[43.5, 20.2], [48.7, 29.7]],
       maxBoundsViscosity: 1.0,
       minZoom: 6,
-      maxZoom: 12
-    }).setView([45.9432, 24.9668], 8); // Zoom mărit
+      maxZoom: 12 // Limitează zoom-in pentru claritate
+    }).setView([45.9432, 24.9668], 7); // Centru România
 
-    // Forțează limite
+    // Forțează revenirea la bounds
     map.on('drag', function() {
       map.panInsideBounds(map.options.maxBounds);
     });
@@ -55,67 +47,28 @@
       }
     });
 
-    // Strat OpenStreetMap
+    // Adăugare strat de bază OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Contur România
-    const romaniaOutline = {
-      "type": "FeatureCollection",
-      "features": [{
-        "type": "Feature",
-        "properties": { "name": "Romania" },
-        "geometry": {
-          "type": "MultiPolygon",
-          "coordinates": [[[
-            [20.2616, 44.2221], [20.3502, 44.8442], [20.4868, 45.2349], [21.0137, 45.6144],
-            [21.5429, 45.9432], [22.1378, 46.3498], [22.8972, 47.9871], [23.7993, 47.9871],
-            [24.9688, 47.9871], [25.8372, 47.9871], [26.6194, 48.2654], [27.4924, 47.9871],
-            [28.8398, 47.7387], [29.6022, 46.5178], [29.1418, 45.4228], [28.2234, 43.6442],
-            [27.4924, 43.6442], [26.6984, 43.6187], [25.8372, 43.6187], [24.9688, 43.6187],
-            [23.7993, 43.6187], [22.8972, 43.6187], [22.1378, 43.6442], [21.5429, 43.6442],
-            [20.4868, 43.6442], [20.2616, 44.2221]
-          ]], [
-            [28.0, 45.0], [28.5, 45.0], [28.5, 45.5], [28.0, 45.5], [28.0, 45.0] // Delta Dunării
-          ]]]
-        }
-      }]
-    };
+    // URL GeoJSON (local)
+    const geojsonURL = 'ro.json'; // Schimbă în 'romania-counties.geojson' dacă așa l-ai salvat
 
-    L.geoJSON(romaniaOutline, {
-      style: {
-        color: "#000000",
-        weight: 6,
-        fill: false
-      }
-    }).addTo(map);
-
-    // Pane-uri pentru z-index
-    map.createPane('bucurestiPane');
-    map.getPane('bucurestiPane').style.zIndex = 650;
-    map.createPane('otherPane');
-    map.getPane('otherPane').style.zIndex = 600;
-
-    // URL GeoJSON
-    const geojsonURL = 'https://raw.githubusercontent.com/maurSAN/new-test/main/ro.json';
-
-    // Abrevieri județe
+    // Abrevieri județe (cu diacritice, conform GeoJSON)
     const abbreviations = {
-      "alba": "AB", "arad": "AR", "arges": "AG", "bacau": "BC", "bihor": "BH",
-      "bistrita-nasaud": "BN", "botosani": "BT", "brasov": "BV", "braila": "BR",
-      "buzau": "BZ", "caras-severin": "CS", "calarasi": "CL", "cluj": "CJ",
-      "constanta": "CT", "covasna": "CV", "dambovita": "DB", "dolj": "DJ",
-      "galati": "GL", "giurgiu": "GR", "gorj": "GJ", "harghita": "HR",
-      "hunedoara": "HD", "ialomita": "IL", "iasi": "IS", "ilfov": "IF",
-      "maramures": "MM", "mehedinti": "MH", "mures": "MS", "neamt": "NT",
-      "olt": "OT", "prahova": "PH", "satu-mare": "SM", "salaj": "SJ",
-      "sibiu": "SB", "suceava": "SV", "teleorman": "TR", "timis": "TM",
-      "tulcea": "TL", "vaslui": "VS", "valcea": "VL", "vrancea": "VN",
-      "bucuresti": "B"
+      "alba": "AB", "arad": "AR", "argeș": "AG", "bacău": "BC", "bihor": "BH",
+      "bistrița-năsăud": "BN", "botoșani": "BT", "brașov": "BV", "brăila": "BR",
+      "buzău": "BZ", "caraș-severin": "CS", "călărași": "CL", "cluj": "CJ",
+      "constanța": "CT", "covasna": "CV", "dâmbovița": "DB", "dolj": "DJ",
+      "galați": "GL", "giurgiu": "GR", "gorj": "GJ", "harghita": "HR", "hunedoara": "HD",
+      "ialomița": "IL", "iași": "IS", "ilfov": "IF", "maramureș": "MM", "mehedinți": "MH",
+      "mureș": "MS", "neamț": "NT", "olt": "OT", "prahova": "PH", "satu mare": "SM",
+      "sălaj": "SJ", "sibiu": "SB", "suceava": "SV", "teleorman": "TR", "timiș": "TM",
+      "tulcea": "TL", "vaslui": "VS", "vâlcea": "VL", "vrancea": "VN", "bucurești": "B"
     };
 
-    // Culori județe
+    // Culoare fixă pentru fiecare județ
     const colors = {
       "AB": "#e6194b", "AR": "#3cb44b", "AG": "#ffe119", "BC": "#4363d8", "BH": "#f58231",
       "BN": "#911eb4", "BT": "#46f0f0", "BV": "#f032e6", "BR": "#bcf60c", "BZ": "#fabebe",
@@ -128,18 +81,13 @@
       "VN": "#d2691e", "B": "#8b0000"
     };
 
-    // Încărcare GeoJSON
+    // Încărcare și afișare GeoJSON
     fetch(geojsonURL)
       .then(res => {
-        if (!res.ok) throw new Error('Fișierul GeoJSON nu s-a încărcat: ' + res.statusText);
+        if (!res.ok) throw new Error('Fișierul GeoJSON nu s-a încărcat');
         return res.json();
       })
       .then(data => {
-        const counties = data.features.map(f => f.properties.NAME_1 || f.properties.name || f.properties.NUME || 'Fără nume');
-        console.log('Județe găsite:', counties);
-        if (!counties.includes('Bucuresti')) console.error('București lipsește din GeoJSON!');
-        if (!counties.includes('Satu Mare')) console.error('Satu Mare lipsește din GeoJSON!');
-
         const geoLayer = L.geoJSON(data, {
           style: (feature) => {
             const rawName = feature.properties.NAME_1 || '';
@@ -147,10 +95,9 @@
             const abbr = abbreviations[name] || "??";
             return {
               color: "#333",
-              weight: 3, // Contur județe mai gros
+              weight: 2,
               fillColor: colors[abbr] || "#cccccc",
-              fillOpacity: 0.7,
-              pane: abbr === "B" ? "bucurestiPane" : "otherPane"
+              fillOpacity: 0.6
             };
           },
           onEachFeature: (feature, layer) => {
@@ -168,12 +115,15 @@
           }
         }).addTo(map);
         
-        map.fitBounds(geoLayer.getBounds(), { padding: [50, 50] }); // Ajustat pentru județe mai mari
+        // Zoom strict pe România
+        map.fitBounds(geoLayer.getBounds(), { padding: [10, 10] });
       })
       .catch(err => {
         console.error('Eroare la încărcare GeoJSON:', err);
-        document.getElementById('map').innerHTML = '<p style="text-align:center;color:red;">Eroare: Nu s-a putut încărca ro.json. Verifică dacă fișierul e în repo!</p>';
+        const mapDiv = document.getElementById('map');
+        mapDiv.innerHTML = '<p style="text-align:center;color:red;">Eroare: Nu s-a putut încărca harta. Verifică dacă ro.json e în folderul corect.</p>';
       });
   </script>
 </body>
 </html>
+
