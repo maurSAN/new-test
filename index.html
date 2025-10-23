@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Harta României — Abrevieri județe</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harta României — Județe Colorate</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body { height: 100%; margin: 0; background: #f5f6f7; }
+    body, html { margin: 0; height: 100%; }
     #map { width: 100%; height: 100%; }
     .county-label {
       font-size: 12px;
       font-weight: bold;
-      color: #222;
-      text-shadow: 0 0 3px #fff;
+      color: #000;
+      text-align: center;
       pointer-events: none;
+      text-shadow: 0 0 3px #fff;
     }
   </style>
 </head>
@@ -22,63 +23,107 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // —— Config hartă minimalistă ——
+    // Funcție pentru normalizarea numelor (doar lowercase, păstrează diacritice)
+    function normalizeName(name) {
+      if (!name) return '';
+      return name.toLowerCase();
+    }
+
+    // Inițializare hartă cu limite stricte pentru România
     const map = L.map('map', {
+      maxBounds: [[43.5, 20.2], [48.7, 29.7]],
+      maxBoundsViscosity: 1.0,
       minZoom: 6,
-      maxZoom: 10,
-      zoomControl: true,
-      maxBounds: [[43.5, 20.0], [48.9, 30.5]],
-      maxBoundsViscosity: 1.0
-    }).setView([45.95, 24.95], 7);
+      maxZoom: 12 // Limitează zoom-in pentru claritate
+    }).setView([45.9432, 24.9668], 7); // Centru România
 
-    // —— Elimină diacriticele și trece la litere mici ——
-    const normalize = s => (s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+    // Forțează revenirea la bounds
+    map.on('drag', function() {
+      map.panInsideBounds(map.options.maxBounds);
+    });
+    map.on('zoomend', function() {
+      if (map.getZoom() < map.options.minZoom) {
+        map.setZoom(map.options.minZoom);
+      }
+    });
 
-    // —— Lista completă de abrevieri județe ——
-    const ABBR = {
-      'alba':'AB','arad':'AR','arges':'AG','bacau':'BC','bihor':'BH','bistrita-nasaud':'BN',
-      'botosani':'BT','brasov':'BV','braila':'BR','buzau':'BZ','caras-severin':'CS','calarasi':'CL',
-      'cluj':'CJ','constanta':'CT','covasna':'CV','dambovita':'DB','dolj':'DJ','galati':'GL','giurgiu':'GR',
-      'gorj':'GJ','harghita':'HR','hunedoara':'HD','ialomita':'IL','iasi':'IS','ilfov':'IF','maramures':'MM',
-      'mehedinti':'MH','mures':'MS','neamt':'NT','olt':'OT','prahova':'PH','satu mare':'SM','salaj':'SJ',
-      'sibiu':'SB','suceava':'SV','teleorman':'TR','timis':'TM','tulcea':'TL','vaslui':'VS','valcea':'VL',
-      'vrancea':'VN','bucuresti':'B','municipiul bucuresti':'B'
+    // Adăugare strat de bază OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // URL GeoJSON (local)
+    const geojsonURL = 'ro.json'; // Schimbă în 'romania-counties.geojson' dacă așa l-ai salvat
+
+    // Abrevieri județe (cu diacritice, conform GeoJSON)
+    const abbreviations = {
+      "alba": "AB", "arad": "AR", "argeș": "AG", "bacău": "BC", "bihor": "BH",
+      "bistrița-năsăud": "BN", "botoșani": "BT", "brașov": "BV", "brăila": "BR",
+      "buzău": "BZ", "caraș-severin": "CS", "călărași": "CL", "cluj": "CJ",
+      "constanța": "CT", "covasna": "CV", "dâmbovița": "DB", "dolj": "DJ",
+      "galați": "GL", "giurgiu": "GR", "gorj": "GJ", "harghita": "HR", "hunedoara": "HD",
+      "ialomița": "IL", "iași": "IS", "ilfov": "IF", "maramureș": "MM", "mehedinți": "MH",
+      "mureș": "MS", "neamț": "NT", "olt": "OT", "prahova": "PH", "satu mare": "SM",
+      "sălaj": "SJ", "sibiu": "SB", "suceava": "SV", "teleorman": "TR", "timiș": "TM",
+      "tulcea": "TL", "vaslui": "VS", "vâlcea": "VL", "vrancea": "VN", "bucurești": "B"
     };
 
-    // —— Încarcă harta din ro.json ——
-    fetch('ro.json')
-      .then(r => r.json())
+    // Culoare fixă pentru fiecare județ
+    const colors = {
+      "AB": "#e6194b", "AR": "#3cb44b", "AG": "#ffe119", "BC": "#4363d8", "BH": "#f58231",
+      "BN": "#911eb4", "BT": "#46f0f0", "BV": "#f032e6", "BR": "#bcf60c", "BZ": "#fabebe",
+      "CS": "#008080", "CL": "#e6beff", "CJ": "#9a6324", "CT": "#fffac8", "CV": "#800000",
+      "DB": "#aaffc3", "DJ": "#808000", "GL": "#ffd8b1", "GR": "#000075", "GJ": "#808080",
+      "HR": "#ffffff", "HD": "#000000", "IL": "#ff7f50", "IS": "#87ceeb", "IF": "#da70d6",
+      "MM": "#32cd32", "MH": "#ffb6c1", "MS": "#7b68ee", "NT": "#00ced1", "OT": "#ff69b4",
+      "PH": "#cd5c5c", "SM": "#4b0082", "SJ": "#20b2aa", "SB": "#b0e0e6", "SV": "#ff4500",
+      "TR": "#2e8b57", "TM": "#da70d6", "TL": "#deb887", "VS": "#5f9ea0", "VL": "#7fff00",
+      "VN": "#d2691e", "B": "#8b0000"
+    };
+
+    // Încărcare și afișare GeoJSON
+    fetch(geojsonURL)
+      .then(res => {
+        if (!res.ok) throw new Error('Fișierul GeoJSON nu s-a încărcat');
+        return res.json();
+      })
       .then(data => {
-        const layer = L.geoJSON(data, {
-          style: {
-            color: '#555',
-            weight: 1,
-            fillColor: '#dcdcdc',
-            fillOpacity: 0.9
+        const geoLayer = L.geoJSON(data, {
+          style: (feature) => {
+            const rawName = feature.properties.NAME_1 || '';
+            const name = normalizeName(rawName);
+            const abbr = abbreviations[name] || "??";
+            return {
+              color: "#333",
+              weight: 2,
+              fillColor: colors[abbr] || "#cccccc",
+              fillOpacity: 0.6
+            };
           },
           onEachFeature: (feature, layer) => {
-            const name = feature.properties?.name || '';
-            const key = normalize(name);
-            const abbr = ABBR[key] || '?'; // fallback vizibil
-
-            // Centru județ + plasare abreviere
-            const center = layer.getBounds().getCenter();
-            const label = L.divIcon({
-              className: 'county-label',
-              html: abbr,
-              iconSize: [30, 12]
+            const rawName = feature.properties.NAME_1 || '';
+            const name = normalizeName(rawName);
+            const abbr = abbreviations[name] || "??";
+            layer.bindTooltip(abbr, {
+              permanent: true,
+              direction: "center",
+              className: 'county-label'
             });
-            L.marker(center, { icon: label, interactive: false }).addTo(map);
-
-            // Efect hover
-            layer.on('mouseover', () => layer.setStyle({ color: '#000', fillColor: '#cfcfcf' }));
-            layer.on('mouseout',  () => layer.setStyle({ color: '#555', fillColor: '#dcdcdc' }));
+            layer.on('click', function(e) {
+              layer.bindPopup(`<b>${rawName}</b><br>Abreviere: ${abbr}<br>(Aici vor fi detalii despre terenuri)`).openPopup();
+            });
           }
         }).addTo(map);
-
-        map.fitBounds(layer.getBounds());
+        
+        // Zoom strict pe România
+        map.fitBounds(geoLayer.getBounds(), { padding: [10, 10] });
       })
-      .catch(err => alert('Eroare la încărcarea ro.json: ' + err.message));
+      .catch(err => {
+        console.error('Eroare la încărcare GeoJSON:', err);
+        const mapDiv = document.getElementById('map');
+        mapDiv.innerHTML = '<p style="text-align:center;color:red;">Eroare: Nu s-a putut încărca harta. Verifică dacă ro.json e în folderul corect.</p>';
+      });
   </script>
 </body>
 </html>
+
