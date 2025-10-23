@@ -62,22 +62,21 @@
       const counties = L.geoJSON(geo, {
         style: () => ({ color: '#858a90', weight: 1, fillColor: '#e4e6e8', fillOpacity: 0.9 }),
         onEachFeature: (feature, layer) => {
-          const rawName = feature.properties?.NAME_1 || feature.properties?.shapeName || feature.properties?.name || '';
+          // 🔧 Aici citim numele județului din câmpul corect: "name"
+          const rawName = feature.properties?.name || '';
           const key = stripDiacritics(rawName);
           const abbr = ABBR[key] || '';
           const offset = labelOffsets[key] || { lat: 0, lng: 0 };
           const c = layer.getBounds().getCenter();
           const center = L.latLng(c.lat + offset.lat, c.lng + offset.lng);
 
-          // Adaugăm eticheta cu abrevierea județului
+          // 🏷️ Adăugăm eticheta cu abrevierea județului
           if (abbr) {
             const icon = L.divIcon({ className: 'county-label', html: abbr, iconSize: [30, 12] });
             L.marker(center, { icon, interactive: false, keyboard: false }).addTo(map);
           }
 
-          // ---------------------------------------------------------
-          // LA CLICK — AFIȘĂM PROPRIETĂȚILE DIN JSON
-          // ---------------------------------------------------------
+          // 💬 Când dai click — afișăm proprietățile din JSON
           layer.on('click', () => {
             const info = props[key];
             let html = `<b>${rawName}</b><hr>`;
@@ -86,12 +85,12 @@
               info.proprietati.forEach(p => html += `<li>${p}</li>`);
               html += '</ul>';
             } else {
-              html += '<i>Nu există proprietăți înregistrate aici.</i><br><small>(Adaugă în proprietati.json dacă e cazul)</small>';
+              html += '<i>Nu există proprietăți înregistrate aici.</i><br><small>(Adaugă sau șterge din proprietati.json după caz)</small>';
             }
             layer.bindPopup(html).openPopup();
           });
 
-          // Hover: evidențiază discret județul
+          // 🌫️ Hover: evidențiază discret județul
           layer.on('mouseover', () => layer.setStyle({ color: '#43474c', weight: 1.75, fillColor: '#d7dadc' }));
           layer.on('mouseout',  () => layer.setStyle({ color: '#858a90', weight: 1,    fillColor: '#e4e6e8' }));
         }
