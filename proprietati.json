@@ -1,0 +1,22 @@
+{
+  "neamt": {
+    "proprietati": [
+      "Teren agricol 2000 m² în Girov",
+      "Teren intravilan 600 m² în Roznov",
+      "Casă cu etaj în Piatra Neamț"
+    ]
+  },
+  "bacau": {
+    "proprietati": [
+      "Casă de vacanță în Slănic Moldova",
+      "Teren extravilan 1000 m²"
+    ]
+  },
+  "bucuresti": {
+    "proprietati": [
+      "Garsonieră Titan",
+      "Apartament 2 camere Militari",
+      "Spațiu comercial"
+    ]
+  }
+}
