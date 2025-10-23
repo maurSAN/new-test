@@ -2233,7 +2233,7 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ROSM", 
-        "name": "Satu Mare"
+        "name": "satu Mare"
       }, 
       "id": 1
     }, 
@@ -3309,7 +3309,7 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ROAR", 
-        "name": "Arad"
+        "name": "arad"
       }, 
       "id": 2
     }, 
