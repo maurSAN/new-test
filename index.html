@@ -3,98 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Harta României — Județe și Proprietăți</title>
+  <title>Harta României — Abrevieri județe</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body { height: 100%; margin: 0; background: #f5f6f7; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
-    #map { height: 100%; width: 100%; }
-    .county-label { font-size: 12px; font-weight: 700; color: #2b2b2b; text-shadow: 0 0 3px #fff; pointer-events: none; }
-    .leaflet-popup-content { font-size: 14px; }
-    .leaflet-interactive { cursor: pointer; }
+    html, body { height: 100%; margin: 0; background: #f5f6f7; }
+    #map { width: 100%; height: 100%; }
+    .county-label {
+      font-size: 12px;
+      font-weight: bold;
+      color: #222;
+      text-shadow: 0 0 3px #fff;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // --- Config hartă ---
+    // —— Config hartă minimalistă ——
     const map = L.map('map', {
       minZoom: 6,
       maxZoom: 10,
-      zoomSnap: 0.25,
       zoomControl: true,
       maxBounds: [[43.5, 20.0], [48.9, 30.5]],
       maxBoundsViscosity: 1.0
     }).setView([45.95, 24.95], 7);
 
-    // --- Elimină diacritice și face tot lowercase ---
+    // —— Elimină diacriticele și trece la litere mici ——
     const normalize = s => (s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
 
-    // --- Abrevieri județe ---
+    // —— Lista completă de abrevieri județe ——
     const ABBR = {
-      'alba':'AB','arad':'AR','arges':'AG','bacau':'BC','bihor':'BH','bistrita-nasaud':'BN','botosani':'BT','brasov':'BV','braila':'BR','buzau':'BZ','caras-severin':'CS','calarasi':'CL','cluj':'CJ','constanta':'CT','covasna':'CV','dambovita':'DB','dolj':'DJ','galati':'GL','giurgiu':'GR','gorj':'GJ','harghita':'HR','hunedoara':'HD','ialomita':'IL','iasi':'IS','ilfov':'IF','maramures':'MM','mehedinti':'MH','mures':'MS','neamt':'NT','olt':'OT','prahova':'PH','satu mare':'SM','salaj':'SJ','sibiu':'SB','suceava':'SV','teleorman':'TR','timis':'TM','tulcea':'TL','vaslui':'VS','valcea':'VL','vrancea':'VN','bucuresti':'B','municipiul bucuresti':'B'
+      'alba':'AB','arad':'AR','arges':'AG','bacau':'BC','bihor':'BH','bistrita-nasaud':'BN',
+      'botosani':'BT','brasov':'BV','braila':'BR','buzau':'BZ','caras-severin':'CS','calarasi':'CL',
+      'cluj':'CJ','constanta':'CT','covasna':'CV','dambovita':'DB','dolj':'DJ','galati':'GL','giurgiu':'GR',
+      'gorj':'GJ','harghita':'HR','hunedoara':'HD','ialomita':'IL','iasi':'IS','ilfov':'IF','maramures':'MM',
+      'mehedinti':'MH','mures':'MS','neamt':'NT','olt':'OT','prahova':'PH','satu mare':'SM','salaj':'SJ',
+      'sibiu':'SB','suceava':'SV','teleorman':'TR','timis':'TM','tulcea':'TL','vaslui':'VS','valcea':'VL',
+      'vrancea':'VN','bucuresti':'B','municipiul bucuresti':'B'
     };
 
-    // --- Offseturi pentru poziția etichetelor ---
-    const labelOffsets = {
-      'neamt': { lat: 0.05, lng: -0.03 },
-      'bucuresti': { lat: -0.04, lng: 0.02 },
-      'bacau': { lat: 0.02, lng: 0.00 }
-    };
+    // —— Încarcă harta din ro.json ——
+    fetch('ro.json')
+      .then(r => r.json())
+      .then(data => {
+        const layer = L.geoJSON(data, {
+          style: {
+            color: '#555',
+            weight: 1,
+            fillColor: '#dcdcdc',
+            fillOpacity: 0.9
+          },
+          onEachFeature: (feature, layer) => {
+            const name = feature.properties?.name || '';
+            const key = normalize(name);
+            const abbr = ABBR[key] || '?'; // fallback vizibil
 
-    // --- Încarcă datele ---
-    Promise.all([
-      fetch('ro.json').then(r => r.json()),
-      fetch('proprietati.json').then(r => r.json()).catch(() => ({}))
-    ])
-    .then(([geo, proprietati]) => {
+            // Centru județ + plasare abreviere
+            const center = layer.getBounds().getCenter();
+            const label = L.divIcon({
+              className: 'county-label',
+              html: abbr,
+              iconSize: [30, 12]
+            });
+            L.marker(center, { icon: label, interactive: false }).addTo(map);
 
-      const counties = L.geoJSON(geo, {
-        style: () => ({ color: '#858a90', weight: 1, fillColor: '#e4e6e8', fillOpacity: 0.9 }),
-        onEachFeature: (feature, layer) => {
-          // Numele județului din fișierul tău
-          const rawName = feature.properties?.name || '';
-          const key = normalize(rawName);
-          const abbr = ABBR[key] || '';
-
-          // --- Poziționare etichetă ---
-          const offset = labelOffsets[key] || { lat: 0, lng: 0 };
-          const c = layer.getBounds().getCenter();
-          const center = L.latLng(c.lat + offset.lat, c.lng + offset.lng);
-
-          // --- Eticheta cu abrevierea ---
-          if (abbr) {
-            const icon = L.divIcon({ className: 'county-label', html: abbr, iconSize: [30, 12] });
-            L.marker(center, { icon, interactive: false }).addTo(map);
+            // Efect hover
+            layer.on('mouseover', () => layer.setStyle({ color: '#000', fillColor: '#cfcfcf' }));
+            layer.on('mouseout',  () => layer.setStyle({ color: '#555', fillColor: '#dcdcdc' }));
           }
+        }).addTo(map);
 
-          // --- Click: arată proprietățile ---
-          layer.on('click', () => {
-            const info = proprietati[key]; // cheia e fără diacritice
-            let html = `<b>${rawName}</b><hr>`;
-            if (info && info.proprietati && info.proprietati.length) {
-              html += '<ul>';
-              info.proprietati.forEach(p => html += `<li>${p}</li>`);
-              html += '</ul>';
-            } else {
-              html += '<i>Nu există proprietăți înregistrate aici.</i><br><small>(Adaugă sau șterge din proprietati.json după caz)</small>';
-            }
-            layer.bindPopup(html).openPopup();
-          });
-
-          // --- Hover efect ---
-          layer.on('mouseover', () => layer.setStyle({ color: '#43474c', weight: 1.75, fillColor: '#d7dadc' }));
-          layer.on('mouseout', () => layer.setStyle({ color: '#858a90', weight: 1, fillColor: '#e4e6e8' }));
-        }
-      }).addTo(map);
-
-      map.fitBounds(counties.getBounds());
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById('map').innerHTML = `<p style='text-align:center;color:#b00020;padding-top:40vh;'>Eroare: ${err.message}</p>`;
-    });
+        map.fitBounds(layer.getBounds());
+      })
+      .catch(err => alert('Eroare la încărcarea ro.json: ' + err.message));
   </script>
 </body>
 </html>
