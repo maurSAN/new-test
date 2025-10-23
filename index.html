@@ -30,7 +30,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Harta României simplă, monocromă, centrată
     const map = L.map('map', {
       minZoom: 6,
       maxZoom: 10,
@@ -40,9 +39,6 @@
       maxBoundsViscosity: 1.0
     }).setView([45.94, 24.97], 7);
 
-    // Eliminăm orice fundal (fără tile-uri, doar contur județe)
-
-    // Abrevieri județe
     const abbreviations = {
       "alba": "AB", "arad": "AR", "argeș": "AG", "bacău": "BC", "bihor": "BH",
       "bistrița-năsăud": "BN", "botoșani": "BT", "brașov": "BV", "brăila": "BR", "buzău": "BZ",
@@ -55,7 +51,6 @@
       "vrancea": "VN", "bucurești": "B"
     };
 
-    // Încărcăm GeoJSON-ul local (ro.json)
     fetch('ro.json')
       .then(res => {
         if (!res.ok) throw new Error('Nu s-a putut încărca ro.json');
@@ -71,7 +66,7 @@
             color: '#666',
             weight: 1,
             fillColor: '#d9d9d9',
-            fillOpacity: 0.7
+            fillOpacity: 0.8
           }),
           onEachFeature: (feature, layer) => {
             const props = feature.properties || {};
@@ -79,7 +74,7 @@
             const norm = name.toLowerCase();
             const abbr = abbreviations[norm] || '';
 
-            // Adaugă etichetă permanentă cu abrevierea județului
+            // Adaugă abrevierea județului pe hartă
             if (abbr) {
               const center = layer.getBounds().getCenter();
               const label = L.divIcon({
@@ -87,10 +82,18 @@
                 html: abbr,
                 iconSize: [30, 12]
               });
-              L.marker(center, { icon: label }).addTo(map);
+              L.marker(center, { icon: label, interactive: false }).addTo(map);
             }
 
-            // Tooltip cu numele complet
+            // Hover efect - evidențiază județul
+            layer.on('mouseover', () => {
+              layer.setStyle({ color: '#333', weight: 2, fillColor: '#bcbcbc' });
+            });
+            layer.on('mouseout', () => {
+              layer.setStyle({ color: '#666', weight: 1, fillColor: '#d9d9d9' });
+            });
+
+            // Tooltip cu numele complet (fără click)
             layer.bindTooltip(name, {
               direction: 'center',
               permanent: false,
@@ -99,7 +102,6 @@
           }
         }).addTo(map);
 
-        // Zoom automat pe România și limite stricte
         try {
           map.fitBounds(layer.getBounds(), { padding: [10, 10] });
         } catch (e) {
