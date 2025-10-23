@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Harta României — Județe (Minimal, cu abrevieri)</title>
+  <title>Harta României — Județe (Minimal, cu abrevieri și offseturi)</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html, body { height: 100%; margin: 0; background: #f5f6f7; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
     #map { height: 100%; width: 100%; }
-    /* Etichete de abrevieri */
     .county-label { font-size: 12px; font-weight: 700; color: #2b2b2b; text-shadow: 0 0 3px #fff; pointer-events: none; }
-    /* Cursor clar pe poligon */
     .leaflet-interactive { cursor: pointer; }
   </style>
 </head>
@@ -19,7 +17,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // —— Setări hartă (fără tiles, doar poligoane) ——
     const map = L.map('map', {
       minZoom: 6,
       maxZoom: 10,
@@ -29,43 +26,51 @@
       maxBoundsViscosity: 1.0
     }).setView([45.95, 24.95], 7);
 
-    // —— Utilitare ——
     const stripDiacritics = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-    // Dicționar abrevieri (chei: fără diacritice, lowercase)
     const ABBR = {
       'alba':'AB','arad':'AR','arges':'AG','bacau':'BC','bihor':'BH','bistrita-nasaud':'BN','botosani':'BT','brasov':'BV','braila':'BR','buzau':'BZ','caras-severin':'CS','calarasi':'CL','cluj':'CJ','constanta':'CT','covasna':'CV','dambovita':'DB','dolj':'DJ','galati':'GL','giurgiu':'GR','gorj':'GJ','harghita':'HR','hunedoara':'HD','ialomita':'IL','iasi':'IS','ilfov':'IF','maramures':'MM','mehedinti':'MH','mures':'MS','neamt':'NT','olt':'OT','prahova':'PH','satu mare':'SM','salaj':'SJ','sibiu':'SB','suceava':'SV','teleorman':'TR','timis':'TM','tulcea':'TL','vaslui':'VS','valcea':'VL','vrancea':'VN','bucuresti':'B','municipiul bucuresti':'B'
     };
 
-    // —— Încărcare GeoJSON local ——
+    // —— Offseturi personalizate pentru etichete (opțional) ——
+    // Poți regla individual poziția fiecărei abrevieri pe hartă.
+    // Valorile sunt în grade (latitudine/longitudine). Exemple:
+    // lat + = mai sus | lat - = mai jos | lng + = dreapta | lng - = stânga
+    const labelOffsets = {
+      'neamt': { lat: 0.05, lng: -0.03 },
+      'bucuresti': { lat: -0.04, lng: 0.02 },
+      'bacau': { lat: 0.02, lng: 0.00 },
+      'arad': { lat: 0.00, lng: -0.02 },
+      'cluj': { lat: 0.03, lng: 0.01 }
+    };
+
     fetch('ro.json', { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error('Nu s-a putut încărca ro.json'); return r.json(); })
       .then(data => {
         if (!data || !Array.isArray(data.features) || !data.features.length) throw new Error('ro.json este gol sau invalid');
 
-        // Stratul cu județe, stil monocrom + hover subtil
         const counties = L.geoJSON(data, {
           style: () => ({ color: '#858a90', weight: 1, fillColor: '#e4e6e8', fillOpacity: 0.9 }),
           onEachFeature: (feature, layer) => {
-            // Numele județului poate fi in NAME_1, shapeName sau name
             const rawName = feature.properties?.NAME_1 || feature.properties?.shapeName || feature.properties?.name || '';
             const key = stripDiacritics(rawName);
             const abbr = ABBR[key] || '';
 
-            // Etichetă permanentă cu abrevierea, centrată pe bounding box
+            // Offset individual (sau implicit 0,0)
+            const offset = labelOffsets[key] || { lat: 0, lng: 0 };
+            const c = layer.getBounds().getCenter();
+            const center = L.latLng(c.lat + offset.lat, c.lng + offset.lng);
+
             if (abbr) {
-              const center = layer.getBounds().getCenter();
               const icon = L.divIcon({ className: 'county-label', html: abbr, iconSize: [30, 12] });
               L.marker(center, { icon, interactive: false, keyboard: false }).addTo(map);
             }
 
-            // Hover: evidențiază discret poligonul
             layer.on('mouseover', () => layer.setStyle({ color: '#43474c', weight: 1.75, fillColor: '#d7dadc' }));
             layer.on('mouseout',  () => layer.setStyle({ color: '#858a90', weight: 1,    fillColor: '#e4e6e8' }));
           }
         }).addTo(map);
 
-        // Încadrare pe România (fallback sigur)
         try { map.fitBounds(counties.getBounds(), { padding: [10, 10] }); }
         catch (_) { map.setView([45.95, 24.95], 7); }
       })
