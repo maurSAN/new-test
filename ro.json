@@ -1,39 +1,387 @@
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "NAME_1": "Neamț"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [26.3, 47.2],
-            [26.5, 47.3],
-            [26.6, 47.1],
-            [26.3, 47.2]
-          ]
-        ]
-      }
+var simplemaps_countrymap_mapdata={
+  main_settings: {
+   //General settings
+    width: "responsive", //'700' or 'responsive'
+    background_color: "#FFFFFF",
+    background_transparent: "yes",
+    border_color: "#ffffff",
+    
+    //State defaults
+    state_description: "State description",
+    state_color: "#88A4BC",
+    state_hover_color: "#3B729F",
+    state_url: "",
+    border_size: 1.5,
+    all_states_inactive: "no",
+    all_states_zoomable: "yes",
+    
+    //Location defaults
+    location_description: "Location description",
+    location_url: "",
+    location_color: "#FF0067",
+    location_opacity: 0.8,
+    location_hover_opacity: 1,
+    location_size: 25,
+    location_type: "square",
+    location_image_source: "frog.png",
+    location_border_color: "#FFFFFF",
+    location_border: 2,
+    location_hover_border: 2.5,
+    all_locations_inactive: "no",
+    all_locations_hidden: "no",
+    
+    //Label defaults
+    label_color: "#ffffff",
+    label_hover_color: "#ffffff",
+    label_size: 16,
+    label_font: "Arial",
+    label_display: "auto",
+    label_scale: "yes",
+    hide_labels: "no",
+    hide_eastern_labels: "no",
+   
+    //Zoom settings
+    zoom: "yes",
+    manual_zoom: "yes",
+    back_image: "no",
+    initial_back: "no",
+    initial_zoom: "-1",
+    initial_zoom_solo: "no",
+    region_opacity: 1,
+    region_hover_opacity: 0.6,
+    zoom_out_incrementally: "yes",
+    zoom_percentage: 0.99,
+    zoom_time: 0.5,
+    
+    //Popup settings
+    popup_color: "white",
+    popup_opacity: 0.9,
+    popup_shadow: 1,
+    popup_corners: 5,
+    popup_font: "12px/1.5 Verdana, Arial, Helvetica, sans-serif",
+    popup_nocss: "no",
+    
+    //Advanced settings
+    div: "map",
+    auto_load: "yes",
+    url_new_tab: "no",
+    images_directory: "default",
+    fade_time: 0.1,
+    link_text: "View Website",
+    popups: "detect",
+    state_image_url: "",
+    state_image_position: "",
+    location_image_url: ""
+  },
+  state_specific: {
+    ROAB: {
+      name: "Alba"
     },
-    {
-      "type": "Feature",
-      "properties": {
-        "NAME_1": "Bacău"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [26.7, 46.7],
-            [27.0, 46.9],
-            [26.8, 46.5],
-            [26.7, 46.7]
-          ]
-        ]
-      }
+    ROAG: {
+      name: "Arges"
+    },
+    ROAR: {
+      name: "Arad"
+    },
+    ROB: {
+      name: "Bucharest"
+    },
+    ROBC: {
+      name: "Bacau"
+    },
+    ROBH: {
+      name: "Bihor"
+    },
+    ROBN: {
+      name: "Bistrita-Nasaud"
+    },
+    ROBR: {
+      name: "Braila"
+    },
+    ROBT: {
+      name: "Botosani"
+    },
+    ROBV: {
+      name: "Brasov"
+    },
+    ROBZ: {
+      name: "Buzau"
+    },
+    ROCJ: {
+      name: "Cluj"
+    },
+    ROCL: {
+      name: "Calarasi"
+    },
+    ROCS: {
+      name: "Caras-Severin"
+    },
+    ROCT: {
+      name: "Constanta"
+    },
+    ROCV: {
+      name: "Covasna"
+    },
+    RODB: {
+      name: "Dâmbovita"
+    },
+    RODJ: {
+      name: "Dolj"
+    },
+    ROGJ: {
+      name: "Gorj"
+    },
+    ROGL: {
+      name: "Galati"
+    },
+    ROGR: {
+      name: "Giurgiu"
+    },
+    ROHD: {
+      name: "Hunedoara"
+    },
+    ROHR: {
+      name: "Harghita"
+    },
+    ROIF: {
+      name: "Ilfov"
+    },
+    ROIL: {
+      name: "Ialomita"
+    },
+    ROIS: {
+      name: "Iasi"
+    },
+    ROMH: {
+      name: "Mehedinti"
+    },
+    ROMM: {
+      name: "Maramures"
+    },
+    ROMS: {
+      name: "Mures"
+    },
+    RONT: {
+      name: "Neamt"
+    },
+    ROOT: {
+      name: "Olt"
+    },
+    ROPH: {
+      name: "Prahova"
+    },
+    ROSB: {
+      name: "Sibiu"
+    },
+    ROSJ: {
+      name: "Salaj"
+    },
+    ROSM: {
+      name: "Satu Mare"
+    },
+    ROSV: {
+      name: "Suceava"
+    },
+    ROTL: {
+      name: "Tulcea"
+    },
+    ROTM: {
+      name: "Timis"
+    },
+    ROTR: {
+      name: "Teleorman"
+    },
+    ROVL: {
+      name: "Vâlcea"
+    },
+    ROVN: {
+      name: "Vrancea"
+    },
+    ROVS: {
+      name: "Vaslui"
     }
-  ]
-}
+  },
+  locations: {
+    "0": {
+      name: "Bucharest",
+      lat: "44.433333",
+      lng: "26.1"
+    }
+  },
+  labels: {
+    ROAB: {
+      name: "Alba",
+      parent_id: "AB",
+      hover_color: "#080808",
+      size: "33"
+    },
+    ROAG: {
+      name: "Arges",
+      parent_id: "AG"
+    },
+    ROAR: {
+      name: "Arad",
+      parent_id: "AR"
+    },
+    ROB: {
+      name: "Bucharest",
+      parent_id: "B"
+    },
+    ROBC: {
+      name: "Bacau",
+      parent_id: "BC"
+    },
+    ROBH: {
+      name: "Bihor",
+      parent_id: "BH"
+    },
+    ROBN: {
+      name: "Bistrita-Nasaud",
+      parent_id: "BN"
+    },
+    ROBR: {
+      name: "Braila",
+      parent_id: "BR"
+    },
+    ROBT: {
+      name: "Botosani",
+      parent_id: "BT"
+    },
+    ROBV: {
+      name: "Brasov",
+      parent_id: "BV"
+    },
+    ROBZ: {
+      name: "Buzau",
+      parent_id: "BZ"
+    },
+    ROCJ: {
+      name: "Cluj",
+      parent_id: "CJ"
+    },
+    ROCL: {
+      name: "Calarasi",
+      parent_id: "CL"
+    },
+    ROCS: {
+      name: "Caras-Severin",
+      parent_id: "CS"
+    },
+    ROCT: {
+      name: "Constanta",
+      parent_id: "CT"
+    },
+    ROCV: {
+      name: "Covasna",
+      parent_id: "CV"
+    },
+    RODB: {
+      name: "Dâmbovita",
+      parent_id: "DB"
+    },
+    RODJ: {
+      name: "Dolj",
+      parent_id: "DJ"
+    },
+    ROGJ: {
+      name: "Gorj",
+      parent_id: "GJ"
+    },
+    ROGL: {
+      name: "Galati",
+      parent_id: "ROGL"
+    },
+    ROGR: {
+      name: "Giurgiu",
+      parent_id: "GR"
+    },
+    ROHD: {
+      name: "Hunedoara",
+      parent_id: "HD"
+    },
+    ROHR: {
+      name: "Harghita",
+      parent_id: "HR"
+    },
+    ROIF: {
+      name: "Ilfov",
+      parent_id: "IF"
+    },
+    ROIL: {
+      name: "Ialomita",
+      parent_id: "IL"
+    },
+    ROIS: {
+      name: "Iasi",
+      parent_id: "IS"
+    },
+    ROMH: {
+      name: "Mehedinti",
+      parent_id: "MH"
+    },
+    ROMM: {
+      name: "Maramures",
+      parent_id: "MM"
+    },
+    ROMS: {
+      name: "Mures",
+      parent_id: "MS"
+    },
+    RONT: {
+      name: "Neamt",
+      parent_id: "NT"
+    },
+    ROOT: {
+      name: "Olt",
+      parent_id: "OT"
+    },
+    ROPH: {
+      name: "Prahova",
+      parent_id: "PH"
+    },
+    ROSB: {
+      name: "Sibiu",
+      parent_id: "SB"
+    },
+    ROSJ: {
+      name: "Salaj",
+      parent_id: "SJ"
+    },
+    ROSM: {
+      name: "Satu Mare",
+      parent_id: "SM"
+    },
+    ROSV: {
+      name: "Suceava",
+      parent_id: "SV"
+    },
+    ROTL: {
+      name: "Tulcea",
+      parent_id: "TL"
+    },
+    ROTM: {
+      name: "Timis",
+      parent_id: "TM"
+    },
+    ROTR: {
+      name: "Teleorman",
+      parent_id: "TR"
+    },
+    ROVL: {
+      name: "Vâlcea",
+      parent_id: "VL"
+    },
+    ROVN: {
+      name: "Vrancea",
+      parent_id: "VN"
+    },
+    ROVS: {
+      name: "Vaslui",
+      parent_id: "VS"
+    }
+  },
+  legend: {
+    entries: []
+  },
+  regions: {}
+};
